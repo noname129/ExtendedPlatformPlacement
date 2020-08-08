@@ -1,0 +1,3 @@
+displayName = Extended Platform Placement
+author = nonami
+version = 0.1
