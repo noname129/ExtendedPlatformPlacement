@@ -10,3 +10,5 @@ There are 5 modes that decides how the platforms are extended. Set a hotkey to s
 Currently known issues:
 - Platforms are extended outside the boundary.
 - Halfbrick(the state hammered 3 times) are not supported.
+
+Last update: add a homepage to description (no necessary change)
