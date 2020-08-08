@@ -11,3 +11,7 @@ There are 5 modes that decides how the platforms are extended. Set a hotkey to s
 # Currently known issues
 - Platforms are extended outside the boundary.
 - Halfbrick(the state hammered 3 times) are not supported.
+
+# Contribute to the mod
+I am very new to tModLoader and there may be some problems that I didn't find out.
+If you find a bug, know how to fix the known issues, or code pieces that are unconventional, then you are more than welcome to open an issue or make a pull request.
