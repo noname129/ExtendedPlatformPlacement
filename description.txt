@@ -11,4 +11,4 @@ Currently known issues:
 - Platforms are extended outside the boundary.
 - Halfbrick(the state hammered 3 times) are not supported.
 
-Last update: add a homepage to description (no necessary change)
+Last update: Fixed a bug that placing platform on empty space consumes an additional platform

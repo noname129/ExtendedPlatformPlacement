@@ -26,11 +26,18 @@ namespace ExtendedPlatformPlacement
                     if (!(player.position.X / 16f - (float)Player.tileRangeX - (float)player.inventory[player.selectedItem].tileBoost - (float)player.blockRange <= (float)Player.tileTargetX)
                         || !((player.position.X + (float)player.width) / 16f + (float)Player.tileRangeX + (float)player.inventory[player.selectedItem].tileBoost - 1f + (float)player.blockRange >= (float)Player.tileTargetX)
                         || !(player.position.Y / 16f - (float)Player.tileRangeY - (float)player.inventory[player.selectedItem].tileBoost - (float)player.blockRange <= (float)Player.tileTargetY)
-                        || !((player.position.Y + (float)player.height) / 16f + (float)Player.tileRangeY + (float)player.inventory[player.selectedItem].tileBoost - 2f + (float)player.blockRange >= (float)Player.tileTargetY)) {
+                        || !((player.position.Y + (float)player.height) / 16f + (float)Player.tileRangeY + (float)player.inventory[player.selectedItem].tileBoost - 2f + (float)player.blockRange >= (float)Player.tileTargetY))
+                    {
                         return false;
                     }
 
                     Tile startTile = Framing.GetTileSafely(targetX, targetY);
+
+                    if (!startTile.active())
+                    {
+                        return true;
+                    }
+
                     if (CheckExtensibility(item, player, modPlayer.EPMode, ref targetX, ref targetY))
                     {
                         int oldTileRangeX = Player.tileRangeX;
@@ -48,30 +55,30 @@ namespace ExtendedPlatformPlacement
 
                         Tile resultTile = Framing.GetTileSafely(targetX, targetY);
 
-                        if (resultTile != null)
+                        if (resultTile.active())
                         {
                             if (modPlayer.EPMode == ExtensionMode.Horizontal || (modPlayer.EPMode == ExtensionMode.Auto && startTile.slope() == 0))
                             {
                                 if (resultTile.halfBrick())
                                 {
                                     WorldGen.PoundTile(targetX, targetY);
-                                    if (Main.netMode == 1)
-                                        NetMessage.SendData(17, -1, -1, null, 7, targetX, targetY, 1f);
+                                    if (Main.netMode == NetmodeID.MultiplayerClient)
+                                        NetMessage.SendData(MessageID.TileChange, -1, -1, null, 7, targetX, targetY, 1f);
                                 };
                             }
                             else if (modPlayer.EPMode == ExtensionMode.Upward
                                 || (modPlayer.EPMode == ExtensionMode.Auto && startTile.slope() == (player.direction == 1 ? 2 : 1)))
                             {
                                 WorldGen.SlopeTile(targetX, targetY, player.direction == 1 ? 2 : 1);
-                                if (Main.netMode == 1)
-                                    NetMessage.SendData(17, -1, -1, null, 14, targetX, targetY, resultTile.slope());
+                                if (Main.netMode == NetmodeID.MultiplayerClient)
+                                    NetMessage.SendData(MessageID.TileChange, -1, -1, null, 14, targetX, targetY, resultTile.slope());
                             }
                             else if (modPlayer.EPMode == ExtensionMode.Downward
                                 || (modPlayer.EPMode == ExtensionMode.Auto && startTile.slope() == (player.direction == 1 ? 1 : 2)))
                             {
                                 WorldGen.SlopeTile(targetX, targetY, player.direction == 1 ? 1 : 2);
-                                if (Main.netMode == 1)
-                                    NetMessage.SendData(17, -1, -1, null, 14, targetX, targetY, resultTile.slope());
+                                if (Main.netMode == NetmodeID.MultiplayerClient)
+                                    NetMessage.SendData(MessageID.TileChange, -1, -1, null, 14, targetX, targetY, resultTile.slope());
                             }
 
                             //WorldGen.PlaceTile(targetX, targetY, item.createTile, false, false, player.whoAmI, item.placeStyle);
@@ -152,48 +159,7 @@ namespace ExtendedPlatformPlacement
                         return false;
                     }
                     ++reach;
-                    //if (nextTile.halfBrick())
-                    //{
-                    //    WorldGen.PoundTile(x, y);
-                    //    if (Main.netMode == 1)
-                    //        NetMessage.SendData(17, -1, -1, null, 7, x, y, 1f);
-                    //}
-                    //else
-                    //{
-                    //    int num = 1;
-                    //    int slope = 2;
-                    //    if (TileID.Sets.Platforms[Main.tile[x + 1, y - 1].type] || TileID.Sets.Platforms[Main.tile[x - 1, y + 1].type] || (WorldGen.SolidTile(x + 1, y) && !WorldGen.SolidTile(x - 1, y)))
-                    //    {
-                    //        num = 2;
-                    //        slope = 1;
-                    //    }
 
-                    //    if (Main.tile[x, y].slope() == 0)
-                    //    {
-                    //        WorldGen.SlopeTile(x, y, num);
-                    //        int num2 = Main.tile[x, y].slope();
-                    //        if (Main.netMode == 1)
-                    //            NetMessage.SendData(17, -1, -1, null, 14, x, y, num2);
-                    //    }
-                    //    else if (Main.tile[x, y].slope() == num)
-                    //    {
-                    //        WorldGen.SlopeTile(x, y, slope);
-                    //        int num3 = Main.tile[x, y].slope();
-                    //        if (Main.netMode == 1)
-                    //            NetMessage.SendData(17, -1, -1, null, 14, x, y, num3);
-                    //    }
-                    //    else
-                    //    {
-                    //        WorldGen.SlopeTile(x, y);
-                    //        int num4 = Main.tile[x, y].slope();
-                    //        if (Main.netMode == 1)
-                    //            NetMessage.SendData(17, -1, -1, null, 14, x, y, num4);
-
-                    //        WorldGen.PoundTile(x, y);
-                    //        if (Main.netMode == 1)
-                    //            NetMessage.SendData(17, -1, -1, null, 7, x, y, 1f);
-                    //    }
-                    //}
                 }
 
                 if (!nextTile.active())
