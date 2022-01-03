@@ -131,7 +131,7 @@ namespace ExtendedPlatformPlacement
 
         public override float UseTimeMultiplier(Item item, Player player)
         {
-            if (!extendedThisFrame)
+            if (!extendedThisFrame || player.whoAmI != Main.myPlayer)
             {
                 return 1f;
             }
@@ -146,7 +146,8 @@ namespace ExtendedPlatformPlacement
 
         public override float MeleeSpeedMultiplier(Item item, Player player)
         {
-            if (!extendedThisFrame)
+
+            if (!extendedThisFrame || player.whoAmI != Main.myPlayer)
             {
                 return 1f;
             }

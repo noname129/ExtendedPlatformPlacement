@@ -1,4 +1,4 @@
 displayName = Extended Platform Placement
 author = nonami
-version = 0.3
+version = 0.3.1
 homepage = https://github.com/noname129/ExtendedPlatformPlacement/	
