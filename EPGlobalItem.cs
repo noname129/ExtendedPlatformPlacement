@@ -8,42 +8,47 @@ namespace ExtendedPlatformPlacement
 {
     public class EPGlobalItem : GlobalItem
     {
+        private static readonly EPConfig config = ModContent.GetInstance<EPConfig>();
         public static bool extendedThisFrame = false;
 
         public override bool UseItem(Item item, Player player)
         {
             extendedThisFrame = false;
-            EPConfig config = ModContent.GetInstance<EPConfig>();
             if (player.whoAmI != Main.myPlayer)
             {
                 return false;
             }
             EPPlayer modPlayer = player.GetModPlayer<EPPlayer>();
-            if (modPlayer.EPMode != ExtensionMode.Off && IsPlatform(item))
+            if (modPlayer.EPMode == ExtensionMode.Off)
             {
-                if (player.itemTime == 0)
-                {
-                    var targetCoord = Main.MouseWorld.ToTileCoordinates();
-                    int targetX = targetCoord.X;
-                    int targetY = targetCoord.Y;
+                return false;
+            }
 
-                    if (!(player.position.X / 16f - (float)Player.tileRangeX - (float)player.inventory[player.selectedItem].tileBoost - (float)player.blockRange <= (float)Player.tileTargetX)
+            if (player.itemTime == 0)
+            {
+                var targetCoord = Main.MouseWorld.ToTileCoordinates();
+                int targetX = targetCoord.X;
+                int targetY = targetCoord.Y;
+
+                Tile startTile = Framing.GetTileSafely(targetX, targetY);
+
+                if (!startTile.active())
+                {
+                    return false;
+                }
+
+                if (IsPlatform(item))
+                {
+                    if (CheckExtensibility(item, player, modPlayer.EPMode, ref targetX, ref targetY))
+                    {
+                        if (!(player.position.X / 16f - (float)Player.tileRangeX - (float)player.inventory[player.selectedItem].tileBoost - (float)player.blockRange <= (float)Player.tileTargetX)
                         || !((player.position.X + (float)player.width) / 16f + (float)Player.tileRangeX + (float)player.inventory[player.selectedItem].tileBoost - 1f + (float)player.blockRange >= (float)Player.tileTargetX)
                         || !(player.position.Y / 16f - (float)Player.tileRangeY - (float)player.inventory[player.selectedItem].tileBoost - (float)player.blockRange <= (float)Player.tileTargetY)
                         || !((player.position.Y + (float)player.height) / 16f + (float)Player.tileRangeY + (float)player.inventory[player.selectedItem].tileBoost - 2f + (float)player.blockRange >= (float)Player.tileTargetY))
-                    {
-                        return false;
-                    }
+                        {
+                            return false;
+                        }
 
-                    Tile startTile = Framing.GetTileSafely(targetX, targetY);
-
-                    if (!startTile.active())
-                    {
-                        return false;
-                    }
-
-                    if (CheckExtensibility(item, player, modPlayer.EPMode, ref targetX, ref targetY))
-                    {
                         int oldTileRangeX = Player.tileRangeX;
                         int oldTileRangeY = Player.tileRangeY;
 
@@ -86,14 +91,41 @@ namespace ExtendedPlatformPlacement
                             }
 
                             //WorldGen.PlaceTile(targetX, targetY, item.createTile, false, false, player.whoAmI, item.placeStyle);
-                            //player.itemTime = Config.FasterPlacement ? 1 : item.useTime;
                             extendedThisFrame = true;
                             return true;
                         }
                     }
                 }
-            }
+                else if (config.ApplyMinecartTracks && item.createTile == TileID.MinecartTrack)
+                {
+                    if (CheckTrackExtensibility(item, player, modPlayer.EPMode, ref targetX, ref targetY))
+                    {
+                        if (!(player.position.X / 16f - (float)Player.tileRangeX - (float)player.inventory[player.selectedItem].tileBoost - (float)player.blockRange <= (float)Player.tileTargetX)
+                        || !((player.position.X + (float)player.width) / 16f + (float)Player.tileRangeX + (float)player.inventory[player.selectedItem].tileBoost - 1f + (float)player.blockRange >= (float)Player.tileTargetX)
+                        || !(player.position.Y / 16f - (float)Player.tileRangeY - (float)player.inventory[player.selectedItem].tileBoost - (float)player.blockRange <= (float)Player.tileTargetY)
+                        || !((player.position.Y + (float)player.height) / 16f + (float)Player.tileRangeY + (float)player.inventory[player.selectedItem].tileBoost - 2f + (float)player.blockRange >= (float)Player.tileTargetY))
+                        {
+                            return false;
+                        }
 
+                        int oldTileRangeX = Player.tileRangeX;
+                        int oldTileRangeY = Player.tileRangeY;
+
+                        Player.tileRangeX = int.MaxValue / 32 - 20;
+                        Player.tileRangeY = int.MaxValue / 32 - 20;
+                        Player.tileTargetX = targetX;
+                        Player.tileTargetY = targetY;
+
+                        player.PlaceThing();
+
+                        Player.tileRangeX = oldTileRangeX;
+                        Player.tileRangeY = oldTileRangeY;
+
+                        extendedThisFrame = true;
+                        return true;
+                    }
+                }
+            }
             return false;
         }
 
@@ -233,6 +265,70 @@ namespace ExtendedPlatformPlacement
             //}
 
             //return canUse;
+        }
+
+        private bool CheckTrackExtensibility(Item item, Player player, ExtensionMode mode, ref int targetX, ref int targetY)
+        {
+            EPPlayer modPlayer = player.GetModPlayer<EPPlayer>();
+            if (Main.tile[targetX, targetY].active())
+            {
+                int targetTileID = item.createTile;
+                int x = targetX;
+                int y = targetY;
+                Tile startTile = Framing.GetTileSafely(targetX, targetY);
+                Tile prevTile = null;
+                int reach = 0;
+                if (startTile.type != TileID.MinecartTrack)
+                {
+                    return false;
+                }
+
+                TileObjectData tileData = TileObjectData.GetTileData(targetTileID, item.placeStyle);
+
+                Tile nextTile = Framing.GetTileSafely(x, y);
+                while (nextTile.active() && nextTile.type == TileID.MinecartTrack)
+                {
+                    prevTile = nextTile;
+                    if (modPlayer.EPMode == ExtensionMode.Horizontal || modPlayer.EPMode == ExtensionMode.Auto)
+                    {
+                        x += player.direction;
+                    }
+                    else if (modPlayer.EPMode == ExtensionMode.Upward)
+                    {
+                        x += player.direction;
+                        y -= 1;
+                    }
+                    else if (modPlayer.EPMode == ExtensionMode.Downward)
+                    {
+                        x += player.direction;
+                        if (reach != 0 || startTile.slope() != 0)
+                        {
+                            y += 1;
+                        }
+                    }
+                    else
+                    {
+                        return false;
+                    }
+
+                    nextTile = Framing.GetTileSafely(x, y);
+
+                    if (nextTile == null || x < 0 || y < 0 || x >= Main.mapMaxX || y >= Main.mapMaxY)
+                    {
+                        return false;
+                    }
+                    ++reach;
+
+                }
+
+                if (!nextTile.active())
+                {
+                    targetX = x;
+                    targetY = y;
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

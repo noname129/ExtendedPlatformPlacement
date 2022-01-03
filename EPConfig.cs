@@ -15,11 +15,15 @@ namespace ExtendedPlatformPlacement
         [Tooltip("Check if the tile behaves like platforms if it's not known as a platform if set to true.\n" +
             "If so, it is also affected.\n" +
             "Can work with mod platforms or planter boxes, but may cause unexpected problems.")]
-        public bool SmartPlatformCheck = true;
+        public bool SmartPlatformCheck;
 
         [DefaultValue(false)]
         [Label("Faster Placement")]
         [Tooltip("Place platform faster when extending it")]
-        public bool FasterPlacement = false;
+        public bool FasterPlacement;
+
+        [DefaultValue(false)]
+        [Label("Apply for minecart tracks")]
+        public bool ApplyMinecartTracks;
     }
 }
