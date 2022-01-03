@@ -8,9 +8,12 @@ There are 5 modes that decides how the platforms are extended. Set a hotkey to s
 - Downward: Always extends platforms downward.
 - Off: Does not extend platforms(no mod effect).
 
+You can choose several options via config.
+- Smart Platform Check: Decide whether this mod affects all items that 'seem' to be a platform, or only items that Terraria says to be platforms.
+- Faster Placement: Make the extension extremely faster. 
+
 # Currently known issues
 - Platforms are extended outside the boundary.
-- Halfbrick(the state hammered 3 times) are not supported.
 
 # Contribute to the mod
 I am very new to tModLoader and there may be some problems that I didn't find out.
