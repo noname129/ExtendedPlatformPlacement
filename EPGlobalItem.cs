@@ -8,14 +8,18 @@ namespace ExtendedPlatformPlacement
 {
     public class EPGlobalItem : GlobalItem
     {
+        public static bool extendedThisFrame = false;
+
         public override bool UseItem(Item item, Player player)
         {
+            extendedThisFrame = false;
+            EPConfig config = ModContent.GetInstance<EPConfig>();
             if (player.whoAmI != Main.myPlayer)
             {
                 return false;
             }
             EPPlayer modPlayer = player.GetModPlayer<EPPlayer>();
-            if (modPlayer.EPMode != ExtensionMode.Off && IsPlatform(item) && item.createTile != -1)
+            if (modPlayer.EPMode != ExtensionMode.Off && IsPlatform(item))
             {
                 if (player.itemTime == 0)
                 {
@@ -35,7 +39,7 @@ namespace ExtendedPlatformPlacement
 
                     if (!startTile.active())
                     {
-                        return true;
+                        return false;
                     }
 
                     if (CheckExtensibility(item, player, modPlayer.EPMode, ref targetX, ref targetY))
@@ -59,7 +63,7 @@ namespace ExtendedPlatformPlacement
                         {
                             if (modPlayer.EPMode == ExtensionMode.Horizontal || (modPlayer.EPMode == ExtensionMode.Auto && startTile.slope() == 0))
                             {
-                                if (resultTile.halfBrick())
+                                if (startTile.halfBrick())
                                 {
                                     WorldGen.PoundTile(targetX, targetY);
                                     if (Main.netMode == NetmodeID.MultiplayerClient)
@@ -82,7 +86,8 @@ namespace ExtendedPlatformPlacement
                             }
 
                             //WorldGen.PlaceTile(targetX, targetY, item.createTile, false, false, player.whoAmI, item.placeStyle);
-                            player.itemTime = item.useTime;
+                            //player.itemTime = Config.FasterPlacement ? 1 : item.useTime;
+                            extendedThisFrame = true;
                             return true;
                         }
                     }
@@ -92,20 +97,56 @@ namespace ExtendedPlatformPlacement
             return false;
         }
 
-        private bool IsPlatform(Item item)
+        public override float UseTimeMultiplier(Item item, Player player)
         {
-            return item.createTile != -1 && TileID.Sets.Platforms[item.createTile];
+            if (!extendedThisFrame)
+            {
+                return 1f;
+            }
+            EPConfig config = ModContent.GetInstance<EPConfig>();
+            if (config.FasterPlacement)
+            {
+                return 5f;
+            }
+
+            return 1f;
         }
 
-        private bool IsPlatformStrict(Item item)
+        public override float MeleeSpeedMultiplier(Item item, Player player)
         {
+            if (!extendedThisFrame)
+            {
+                return 1f;
+            }
+            EPConfig config = ModContent.GetInstance<EPConfig>();
+            if (config.FasterPlacement)
+            {
+                extendedThisFrame = false;
+                return 5f;
+            }
 
-            return item.consumable
-                && item.createTile != -1
-                && !Main.tileSolid[item.createTile]
-                && Main.tileSolidTop[item.createTile]
-                && !Main.tileTable[item.createTile]
-            // TODO more conditions
+            return 1f;
+        }
+
+        private bool IsPlatform(Item item)
+        {
+            return IsPlatform(item.createTile);
+        }
+
+        private bool IsPlatform(int tile)
+        {
+            EPConfig Config = ModContent.GetInstance<EPConfig>();
+            return tile != -1 && (TileID.Sets.Platforms[tile]
+                || (Config.SmartPlatformCheck && IsPlatformStrict(tile)));
+        }
+
+        private bool IsPlatformStrict(int tile)
+        {
+            return tile != -1
+                && Main.tileSolid[tile]
+                && Main.tileSolidTop[tile]
+                && Main.tileTable[tile]
+            // maybe there're more conditions? idk
             ;
         }
 
@@ -124,7 +165,7 @@ namespace ExtendedPlatformPlacement
                 TileObjectData tileData = TileObjectData.GetTileData(targetTileID, item.placeStyle);
 
                 Tile nextTile = Framing.GetTileSafely(x, y);
-                while (nextTile.active() && TileID.Sets.Platforms[nextTile.type]
+                while (nextTile.active() && IsPlatform(nextTile.type)
                     && (reach <= 1 || nextTile.HasSameSlope(prevTile)) && !nextTile.lava())
                 {
                     prevTile = nextTile;
