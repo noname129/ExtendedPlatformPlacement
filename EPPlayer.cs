@@ -7,7 +7,7 @@ namespace ExtendedPlatformPlacement
 {
     public class EPPlayer : ModPlayer
     {
-        public ExtendedPlatformPlacement Mod = ModContent.GetInstance<ExtendedPlatformPlacement>();
+        public ExtendedPlatformPlacement EPMod = ModContent.GetInstance<ExtendedPlatformPlacement>();
         public ExtensionMode EPMode = ExtensionMode.Auto;
 
         public override void ProcessTriggers(TriggersSet triggersSet)

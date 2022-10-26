@@ -14,7 +14,7 @@ namespace ExtendedPlatformPlacement
 	
 	public class ExtendedPlatformPlacement : Mod
 	{
-		public static ModHotKey SwitchExtensionModeHotkey;
+		public static ModKeybind SwitchExtensionModeHotkey;
 		public static ExtensionMode[] extensionModes = (ExtensionMode[])Enum.GetValues(typeof(ExtensionMode));
 
 		public ExtendedPlatformPlacement()
@@ -23,7 +23,7 @@ namespace ExtendedPlatformPlacement
 
         public override void Load()
         {
-			SwitchExtensionModeHotkey = RegisterHotKey("Switch Extension Mode", "OemOpenBrackets");
+			SwitchExtensionModeHotkey = KeybindLoader.RegisterKeybind(this, "Switch Extension Mode", "OemOpenBrackets");
         }
 
         public override void Unload()
