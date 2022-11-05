@@ -13,4 +13,4 @@ You can choose several options via config.
 - Faster Placement: Make the extension extremely faster.
 - Apply for minecart tracks: Auto mode behaves same as Horizontal. You have to manually set mode to make diagonal tracks.
 
-Last update: 1.4 port
+Last update: Fix desync bug by totally revamping code
